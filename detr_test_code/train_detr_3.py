@@ -1,3 +1,9 @@
+'''
+Status: this program currently "works". It's trying to train both the bbox
+and the classifier. Unfortunately, it is not yielding good results yet.
+There is still some confusion on what to use as the 'background class' 
+'''
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
