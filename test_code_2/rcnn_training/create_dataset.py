@@ -16,12 +16,10 @@ import torchvision.io as io
 import torchvision.transforms as T 
 # import torchvision.utils as utils
 
-# TODO: get bounding boxes associated with each image 
-# Start by determining optimal data type
-
+cwd = os.getcwd()
 # Path to dataset 
-data_dir_path = '/Users/akselsloan/Desktop/test_dataset'
-images_dir_path = os.path.join(data_dir_path, 'Fith')
+data_dir_path = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data')
+images_dir_path = os.path.join(data_dir_path, 'fish_images')
 train_json_file_name = 'train.json'
 resize_dims = (600,800)
 resize_transform = T.Resize(resize_dims)
