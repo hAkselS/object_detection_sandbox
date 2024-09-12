@@ -109,7 +109,7 @@ labels = targets[0]['labels']  # Tensor of labels
 
 def main():
     display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
-
+    model.train()
 
 
 if __name__ == '__main__':
