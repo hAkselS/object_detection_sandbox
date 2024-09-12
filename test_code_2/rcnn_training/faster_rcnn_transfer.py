@@ -106,5 +106,11 @@ image = images[0].permute(1, 2, 0).numpy()  # Convert image to HWC format and nu
 boxes = targets[0]['boxes'].numpy()  # Convert to numpy array
 labels = targets[0]['labels']  # Tensor of labels
 
-display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
 
+def main():
+    display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
+
+
+
+if __name__ == '__main__':
+    main()

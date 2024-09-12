@@ -83,7 +83,7 @@ def get_bboxes(json_file, idx): # TODO: bounding boxes are coming out WRONG (may
     # The x y refers to the top left corner of the box. (0,0) is the top left corner of the image
     # Adjust as necessary. 
     '''
-    Returns a list of lists with all the bboxes in them. Format not determined yet. 
+    Returns a list of lists with all the bboxes in them. Format is [x0,y0, x1,y1,] 
     '''
     bboxes = []
     for i in range(len(json_file[idx]['annotations'][0]['result'])):
@@ -98,12 +98,6 @@ def get_bboxes(json_file, idx): # TODO: bounding boxes are coming out WRONG (may
         y_height = json_file[idx]['annotations'][0]['result'][i]['value']['height']
 
         x_min = x_min * norm_x
-        # x_max = (x_max * norm_x) + x_min 
-        print("idx = ", idx)
-        print("x_width =", x_width)
-        print("norm_x =", norm_x)
-        print("x_min =", x_min)
-        print("\n\n")
         x_max = (x_width * norm_x) + x_min
         y_min = y_min * norm_y 
         y_max = (y_height * norm_y) + y_min 
