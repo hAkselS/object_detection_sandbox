@@ -16,6 +16,7 @@ import torchvision.io as io
 import torchvision.transforms as T 
 # import torchvision.utils as utils
 
+
 cwd = os.getcwd()
 # Path to dataset 
 data_dir_path = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data')
@@ -142,7 +143,7 @@ def main():
     data = MyFishDataset()
 
     data.__getitem__(0)
-    # print("data.__getitem__(0) yields:", data.__getitem__(0))
+    # print("data.__getitem__(0) yields:", data.__getitem__(4))
     # print(" length =", data.__len__())
     # for i in range(12):
     #     image = data.__getitem__(i)[0]

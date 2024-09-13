@@ -4,8 +4,22 @@
 # Reference this as well ^
 # https://github.com/harshatejas/pytorch_custom_object_detection/tree/main
 # And this 
+# https://brsoff.github.io/tutorials/beginner/finetuning_torchvision_models_tutorial.html
+
+'''
+Spec: this script is used to feature extract from restnet 50 using a custom dataset. 
+The dataset consists of about 30 images hand annoted by yours truly in label studio. 
+There is a train.json file associated with the dataset that contains the bounding box
+and class information. The dataset is mostly defined in 'create_dataset.py' and imported
+into this script. The purpose of this script is to remove the head from the dataset, 
+replace with a custom head containing 3 classes [fish, bait_arm, background] and 
+train the new head with a small amount of data .
+feature extact = remove the classification layer and retrain a new one. 
+'''
 
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import time 
 
 # 6:32 - list of all imports 
 import torch 
@@ -13,58 +27,23 @@ import torchvision
 from torchvision.models.detection import FasterRCNN_ResNet50_FPN_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor 
 from torch.utils.data import DataLoader # Used to translate my dataset to torch 
+import torch.nn as nn 
+import torch.optim as optim
 #from torchvision import transforms as T 
 
 import create_dataset as mydata     # Helper functions by Aks
 
-
-# Select and easy object detection model
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
-
-num_classes = 3 # fish, bait_arm, background
-in_features = model.roi_heads.box_predictor.cls_score.in_features   # Number of inputs to bbox and classifier layers (that we will train)
-#print('in_features = ', in_features)
-
-# Create the new box predictor with my custom number of classes 
-model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-
-#print(model)
-
-# pull in my dataset    
-mydataset = mydata.MyFishDataset() # Comes with file pointer 
-
-
-# Collate function to handle varying sizes of bboxes and labels
-def collate_fn(batch):
-    images = [item[0] for item in batch]
-    targets = []
-    for item in batch:
-        labels = torch.tensor(item[1], dtype=torch.int64)
-        bboxes = torch.tensor(item[2], dtype=torch.float32)
-        targets.append({"boxes": bboxes, "labels": labels})
-    return images, targets
-
-# Use the collate_fn in your DataLoader
-train_dataloader = DataLoader(mydataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import torch
-import torchvision
-from torchvision.models.detection import FasterRCNN_ResNet50_FPN_Weights
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torch.utils.data import DataLoader
-
-import create_dataset as mydata     # Helper functions by Aks
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f'device = {device}')
 
 # Select an object detection model
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
+custom_model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
 
 num_classes = 3  # fish, bait_arm, background
-in_features = model.roi_heads.box_predictor.cls_score.in_features
+in_features = custom_model.roi_heads.box_predictor.cls_score.in_features
 
 # Create the new box predictor with custom number of classes
-model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+custom_model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
 # Pull in your dataset
 mydataset = mydata.MyFishDataset()
@@ -80,58 +59,14 @@ def collate_fn(batch):
     return images, targets
 
 # Use the collate_fn in your DataLoader
-train_dataloader = DataLoader(mydataset, batch_size=3, shuffle=False, collate_fn=collate_fn)
-
-# # Display image with bounding boxes and labels
-# def display_image_with_boxes(image, boxes, labels, label_dict):
-#     fig, ax = plt.subplots(1, figsize=(12, 9))
-#     ax.imshow(image)
-#     for box, label in zip(boxes, labels):
-#         box = box.tolist()
-#         # Convert box to format (x0, y0, x1, y1)
-#         x0, y0, x1, y1 = box
-#         width = x1 - x0
-#         height = y1 - y0 
-
-#         rect = patches.Rectangle((x0, y0), width, height, linewidth=1, edgecolor='r', facecolor='none')
-#         ax.add_patch(rect)
-#         plt.text(x0, y0, label_dict[label.item()], color='red', fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
-#     plt.show()
-
-# # Fetch a batch of data
-# images, targets = next(iter(train_dataloader))
-
-# # Display the first image with its bounding boxes and labels
-# image = images[0].permute(1, 2, 0).numpy()  # Convert image to HWC format and numpy array
-# boxes = targets[0]['boxes'].numpy()  # Convert to numpy array
-# labels = targets[0]['labels']  # Tensor of labels
+train_dataloader = DataLoader(mydataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
 
 # Display image with bounding boxes and labels
-# def display_image_with_boxes(image, boxes, labels, label_dict):
-#     fig, ax = plt.subplots(1, figsize=(12, 9))
-#     ax.imshow(image)
-#     for box, label in zip(boxes, labels):
-#         box = box.tolist()
-#         # Convert box to format (x0, y0, x1, y1)
-#         x0, y0, x1, y1 = box
-#         width = x1 - x0
-#         height = y1 - y0 
-
-#         rect = patches.Rectangle((x0, y0), width, height, linewidth=1, edgecolor='r', facecolor='none')
-#         ax.add_patch(rect)
-#         plt.text(x0, y0, label_dict[label.item()], color='red', fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
-#     plt.show()
-
-# # Fetch a batch of data
-# images, targets = next(iter(train_dataloader))
-
-# # Display the first image with its bounding boxes and labels
-# image = images[0].permute(1, 2, 0).numpy()  # Convert image to HWC format and numpy array
-# boxes = targets[0]['boxes'].numpy()  # Convert to numpy array
-# labels = targets[0]['labels']  # Tensor of labels
-
-# Display image with bounding boxes and labels
-def display_image_with_boxes(dataloader, idx, label_dict):
+def display_image_with_boxes(dataloader, idx, label_dict): # idx ranges from 0, batch-1 
+    '''
+    Displays an image with bbox from the first batch. 
+    Only displays from range 0 to batch - 1. 
+    '''
     images, targets = next(iter(dataloader))
     # Display the first image with its bounding boxes and labels
     image = images[idx].permute(1, 2, 0).numpy()  # Convert image to HWC format and numpy array
@@ -151,11 +86,57 @@ def display_image_with_boxes(dataloader, idx, label_dict):
         plt.text(x0, y0, label_dict[label.item()], color='red', fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
     plt.show()
 
+def train_model(model, dataloaders, criterion, optimizer, num_epochs=2, is_inception=False):
+    # since = time.time()
+    
+    for epoch in range(num_epochs):
+        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print('-' * 10)
+
+        # omit phases (always training here)
+        model.train()
+
+        #images, targets = next(iter(dataloaders)) # maybe 
+        for images, targets in dataloaders: # inputs and labels in reference code 
+            # images = images.to(device)
+            images = [image.to(device) for image in images] # valid solution, but may need to change data structure 
+            #targets = targets.to(device) 
+            targets = [{key: value.to(device) for key, value in target.items()} for target in targets]
+
+            optimizer.zero_grad()  
+
+            with torch.set_grad_enabled:
+
+                outputs = model(images)
+                loss = criterion(outputs, targets)
+
+                _, preds = torch.max(outputs, 1) # not sure what this does
+
+                loss.backward()
+                optimizer.step()
+
+                # Omit statistical stuff 
+    torch.save(model.cpu(), 'test_code_2/rcnn_training/custom_resnet_pt' )
+    return model 
+
+def set_parameter_requires_grad(model):
+    # if feature_extracting:
+    for param in model.parameters():
+        param.requires_grad = False
+
+
+params_to_update = custom_model.parameters() # TODO: currently updating all parameters, so this is wrong
+criterion = nn.CrossEntropyLoss()
+
+optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+
 def main():
     # display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
     print('bob le sponge ')
-    display_image_with_boxes(train_dataloader, 4, mydata.labels_dict) # only 0 through 2????f
+    # display_image_with_boxes(train_dataloader, 1, mydata.labels_dict) # only 0 through 2????f
     
+    set_parameter_requires_grad(custom_model)
+    train_model(custom_model, train_dataloader, criterion, optimizer, 2, False)
 
 
 if __name__ == '__main__':
