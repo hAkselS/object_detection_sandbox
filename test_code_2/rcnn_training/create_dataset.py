@@ -25,11 +25,11 @@ train_json_file_name = 'train.json'
 resize_dims = (600,800)
 resize_transform = T.Resize(resize_dims)
 
-labels_dict = {
-    0: 'fish',
+labels_dict = { 
+    2: 'fish',
     1: 'bait_arm',
-    2: 'background'
-}
+    0: 'background'
+} # TODO: Try making background zero, model isn't putting out any 0s
 labels_to_index = {v: k for k, v in labels_dict.items()}
 
 

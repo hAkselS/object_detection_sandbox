@@ -50,7 +50,11 @@ mydataset = mydata.MyFishDataset()
 
 # Collate function to handle varying sizes of bboxes and labels
 def collate_fn(batch):
-    images = [item[0] for item in batch]
+    #images = [item[0] for item in batch]
+    #images = [item[0].float() / 255.0 for item in batch]  # Convert to float and normalize to [0, 1]
+    images = [item[0][:3].float() / 255.0 for item in batch] # Convert to float, normalize [0, 1], and remove extra channel
+
+
     targets = []
     for item in batch:
         labels = torch.tensor(item[1], dtype=torch.int64)
@@ -85,47 +89,45 @@ def display_image_with_boxes(dataloader, idx, label_dict): # idx ranges from 0, 
         ax.add_patch(rect)
         plt.text(x0, y0, label_dict[label.item()], color='red', fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
     plt.show()
-
-def train_model(model, dataloaders, criterion, optimizer, num_epochs=2, is_inception=False):
-    # since = time.time()
-    
+ 
+def train_model(model, dataloaders, criterion, optimizer, num_epochs=2):
     for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+        print(f'Epoch {epoch}/{num_epochs - 1}')
         print('-' * 10)
 
-        # omit phases (always training here)
-        model.train()
-
-        #images, targets = next(iter(dataloaders)) # maybe 
-        for images, targets in dataloaders: # inputs and labels in reference code 
-            # images = images.to(device)
-            images = [image.to(device) for image in images] # valid solution, but may need to change data structure 
-            #targets = targets.to(device) 
+        model.train()  # Set the model to training mode
+        
+        for images, targets in dataloaders:
+            images = [image.to(device) for image in images]
+            #targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
             targets = [{key: value.to(device) for key, value in target.items()} for target in targets]
 
-            optimizer.zero_grad()  
 
-            with torch.set_grad_enabled:
+            optimizer.zero_grad()  # Zero the parameter gradients
 
-                outputs = model(images)
-                loss = criterion(outputs, targets)
+            loss_dict = model(images, targets)  # Pass both images and targets during training
+            losses = sum(loss for loss in loss_dict.values())  # Sum the losses from the different heads
 
-                _, preds = torch.max(outputs, 1) # not sure what this does
+            losses.backward()
+            optimizer.step()
 
-                loss.backward()
-                optimizer.step()
+        print(f'Epoch {epoch} loss: {losses.item()}')
 
-                # Omit statistical stuff 
-    torch.save(model.cpu(), 'test_code_2/rcnn_training/custom_resnet_pt' )
-    return model 
+    torch.save(model, 'test_code_2/rcnn_training/custom_resnet_fasterrcnn_2.pt')
+    return model
+
 
 def set_parameter_requires_grad(model):
-    # if feature_extracting:
+    # Freeze all the parameters in the model
     for param in model.parameters():
         param.requires_grad = False
+    
+    # Allow training only for the box_predictor (classification head)
+    for param in model.roi_heads.box_predictor.parameters():
+        param.requires_grad = True
 
 
-params_to_update = custom_model.parameters() # TODO: currently updating all parameters, so this is wrong
+params_to_update = [p for p in custom_model.parameters() if p.requires_grad]
 criterion = nn.CrossEntropyLoss()
 
 optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
@@ -136,8 +138,10 @@ def main():
     # display_image_with_boxes(train_dataloader, 1, mydata.labels_dict) # only 0 through 2????f
     
     set_parameter_requires_grad(custom_model)
-    train_model(custom_model, train_dataloader, criterion, optimizer, 2, False)
 
+    train_model(custom_model, train_dataloader, criterion, optimizer, 30)
+
+    # print(collate_fn(mydataset))  # if you want to view the labels of the training dataset
 
 if __name__ == '__main__':
     main()
