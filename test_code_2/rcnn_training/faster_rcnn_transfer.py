@@ -5,7 +5,8 @@
 # https://github.com/harshatejas/pytorch_custom_object_detection/tree/main
 # And this 
 # https://brsoff.github.io/tutorials/beginner/finetuning_torchvision_models_tutorial.html
-
+# https://pytorch.org/docs/stable/quantization.html
+# For quantization ^ 
 '''
 Spec: this script is used to feature extract from restnet 50 using a custom dataset. 
 The dataset consists of about 30 images hand annoted by yours truly in label studio. 
@@ -29,7 +30,7 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torch.utils.data import DataLoader # Used to translate my dataset to torch 
 import torch.nn as nn 
 import torch.optim as optim
-#from torchvision import transforms as T 
+# import transforms as T 
 
 import create_dataset as mydata     # Helper functions by Aks
 
@@ -117,7 +118,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=2):
 
         print(f'Epoch {epoch} loss: {losses.item()}')
 
-    torch.save(model, 'test_code_2/rcnn_training/custom_resnet_fasterrcnn_2.pt')
+    torch.save(model, 'test_code_2/fasterrcnn.pt')
+    
     return model
 
 # Step 5a: Freeze all model params except on the layer I am adding
@@ -137,6 +139,7 @@ criterion = nn.CrossEntropyLoss()
 
 optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 
+
 # Step 7: Train in main! 
 def main():
     # display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
@@ -145,8 +148,16 @@ def main():
     
     set_parameter_requires_grad(custom_model)
 
-    train_model(custom_model, train_dataloader, criterion, optimizer, 4)
+    train_model(custom_model, train_dataloader, criterion, optimizer, 1)
 
+    # quantized_model = torch.quantization.quantize_dynamic(
+    #     custom_model,  # Model to quantize
+    #     {torch.nn.Linear},  # Layers to quantize (focus on Linear layers)
+    #     dtype=torch.qint8  # Quantize to int8
+    # )
+
+    # # Save the quantized model
+    # torch.save(quantized_model, 'test_code_2/rcnn_training/quantized_fasterrcnn_dynamic.pt')
     # print(collate_fn(mydataset))  # if you want to view the labels of the training dataset
 
 if __name__ == '__main__':
@@ -163,4 +174,7 @@ Additionally, this allows the model to be ran independently of python in
 languages such as C++. 
 
 # https://pytorch.org/docs/stable/quantization.html
+
+Note on quantization: struggle bus insues. It's not a plug 
+and play solution. It may require a little more... not worth it. 
 '''
