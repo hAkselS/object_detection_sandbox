@@ -36,15 +36,17 @@ import create_dataset as mydata     # Helper functions by Aks
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f'device = {device}')
 
-# Select an object detection model
+# Step 1: Select an object detection model
 custom_model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.DEFAULT)
 
+# Step 2: Replace the old classifier with my new one
 num_classes = 3  # fish, bait_arm, background
 in_features = custom_model.roi_heads.box_predictor.cls_score.in_features
 
 # Create the new box predictor with custom number of classes
 custom_model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
+# Step 3: Get and format dataset 
 # Pull in your dataset
 mydataset = mydata.MyFishDataset()
 
@@ -65,6 +67,7 @@ def collate_fn(batch):
 # Use the collate_fn in your DataLoader
 train_dataloader = DataLoader(mydataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
 
+# Step 4 (Optional): Display training data with bounding boxes
 # Display image with bounding boxes and labels
 def display_image_with_boxes(dataloader, idx, label_dict): # idx ranges from 0, batch-1 
     '''
@@ -90,6 +93,7 @@ def display_image_with_boxes(dataloader, idx, label_dict): # idx ranges from 0, 
         plt.text(x0, y0, label_dict[label.item()], color='red', fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
     plt.show()
  
+ # Step 5: Train the model on the training data
 def train_model(model, dataloaders, criterion, optimizer, num_epochs=2):
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{num_epochs - 1}')
@@ -116,7 +120,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=2):
     torch.save(model, 'test_code_2/rcnn_training/custom_resnet_fasterrcnn_2.pt')
     return model
 
-
+# Step 5a: Freeze all model params except on the layer I am adding
 def set_parameter_requires_grad(model):
     # Freeze all the parameters in the model
     for param in model.parameters():
@@ -127,11 +131,13 @@ def set_parameter_requires_grad(model):
         param.requires_grad = True
 
 
+# Step 6: Create an optimizer and criterion for training
 params_to_update = [p for p in custom_model.parameters() if p.requires_grad]
 criterion = nn.CrossEntropyLoss()
 
 optimizer = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
 
+# Step 7: Train in main! 
 def main():
     # display_image_with_boxes(image, boxes, labels, mydata.labels_dict)
     print('bob le sponge ')
@@ -139,9 +145,22 @@ def main():
     
     set_parameter_requires_grad(custom_model)
 
-    train_model(custom_model, train_dataloader, criterion, optimizer, 30)
+    train_model(custom_model, train_dataloader, criterion, optimizer, 4)
 
     # print(collate_fn(mydataset))  # if you want to view the labels of the training dataset
 
 if __name__ == '__main__':
     main()
+
+'''
+Next steps:
+1. Quantize the model: Make it so the model uses int8 instead of 
+F32 to reduce computational power. This will make the model run 2 to 4 times 
+faster. Train the model, then quantize it. 
+2. Script the model: Use the model.jit.script method to save the model. 
+This will allow the model to be ran without defining model params ahead of time. 
+Additionally, this allows the model to be ran independently of python in 
+languages such as C++. 
+
+# https://pytorch.org/docs/stable/quantization.html
+'''
