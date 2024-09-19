@@ -12,8 +12,9 @@ import torch
 from ultralytics import YOLO
 # import cv2
 import os
+import time 
 
-cwd = os.getcwd()
+cwd = os.getcwd() # Fish_no_fish project root
 
 model_path = os.path.join(cwd, 'models/yolov8n_fish_trained_lgds.pt')
 
@@ -21,13 +22,42 @@ print("hello world")
 
 model = YOLO(model_path)
 
-inference_image = os.path.join(cwd, "LeFish.png")
-results = model(source=inference_image) # save_txt=True 
-                                         # Save output classes as class, x_center, y_center, width, height, confidence
+images_dir = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
 
 
-for result in results:
-    boxes = result.boxes
-    probs = result.probs
-    oriented_bounding_boxes = result.obb
-    result.show()
+
+def process_images(images_path):
+    count = 0 
+    processed_imgs = set() 
+
+    while(True): 
+        all_images = os.listdir(images_path)
+        num_images = len(all_images)
+
+        # Get all the unprocessed images
+        images = [cur_image for cur_image in all_images if cur_image.endswith(('.jpg', '.png')) and cur_image not in processed_imgs]
+        
+        for image in images:
+            image_path = os.path.join(images_path, image)
+
+            inference = model(image_path, save_txt=True)
+
+            processed_imgs.add(image)
+            print(count)
+            # print(processed_imgs)
+            count = count + 1 
+
+        # Wait a second and check if any new images were added
+        time.sleep(10)
+        all_images = os.listdir(images_path)
+        new_num_images = len(all_images)
+        if(new_num_images == num_images):
+            print("No new images, exiting...")
+            exit()
+        
+# Test to see what happens if I add one more image 
+# while its running. Make sure that the code only 
+# processes the new image 
+
+
+process_images(images_dir)
