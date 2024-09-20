@@ -16,21 +16,20 @@ import torchvision.io as io
 import torchvision.transforms as T 
 # import torchvision.utils as utils
 
-# TODO: get bounding boxes associated with each image 
-# Start by determining optimal data type
 
+cwd = os.getcwd()
 # Path to dataset 
-data_dir_path = '/Users/akselsloan/Desktop/test_dataset'
-images_dir_path = os.path.join(data_dir_path, 'Fith')
+data_dir_path = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data')
+images_dir_path = os.path.join(data_dir_path, 'fish_images')
 train_json_file_name = 'train.json'
 resize_dims = (600,800)
 resize_transform = T.Resize(resize_dims)
 
-labels_dict = {
-    0: 'fish',
+labels_dict = { 
+    2: 'fish',
     1: 'bait_arm',
-    2: 'background'
-}
+    0: 'background'
+} # TODO: Try making background zero, model isn't putting out any 0s
 labels_to_index = {v: k for k, v in labels_dict.items()}
 
 
@@ -144,7 +143,7 @@ def main():
     data = MyFishDataset()
 
     data.__getitem__(0)
-    # print("data.__getitem__(0) yields:", data.__getitem__(0))
+    # print("data.__getitem__(0) yields:", data.__getitem__(4))
     # print(" length =", data.__len__())
     # for i in range(12):
     #     image = data.__getitem__(i)[0]
