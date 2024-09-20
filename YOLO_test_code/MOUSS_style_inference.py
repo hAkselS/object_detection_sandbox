@@ -25,7 +25,17 @@ model = YOLO(model_path)
 
 images_dir = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
 
+def create_csv(directory):
+    header = ['image', 'number of detections']
+    with open(directory, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(header)
 
+def write_line(directory, image_name, num_detections):
+    line = [image_name, num_detections]
+    with open(directory, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerows(line)
 
 def process_images(images_path):
     count = 0 
@@ -44,8 +54,10 @@ def process_images(images_path):
 
             # Run inference and store number of detections
             inference = model(image_path)
-            detection_count = len(inference.boxes)
-            meta_data.append([image, detection_count])
+        
+            detection_count = len(inference.names)
+            # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
+            write_line(os.path.join(cwd, 'detections.csv'), image, detection_count)
             
 
 
@@ -64,7 +76,8 @@ def process_images(images_path):
             exit()
         
 
-
+# main
+create_csv(os.path.join(cwd, 'detections.csv')) # Use current directory for now
 process_images(images_dir)
 
 # Run inference on every image 
