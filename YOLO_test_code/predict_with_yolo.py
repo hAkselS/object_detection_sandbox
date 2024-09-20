@@ -9,7 +9,10 @@ model = YOLO("yolov8n.pt")
 results = model.predict(source ='LeFish.png')
 
 img = cv2.imread("LeFish.png")
-results = model.predict(source=img, show=True)
+results = model.predict(source=img)
 
-while(True):
-    pass 
+for result in results:
+    boxes = result.boxes
+    print(len(boxes))
+    result.show()
+

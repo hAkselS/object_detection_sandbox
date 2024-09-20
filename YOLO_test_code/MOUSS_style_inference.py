@@ -9,7 +9,7 @@ Reference:
 '''
 
 import torch 
-from ultralytics import YOLO
+from ultralytics import YOLO, solutions
 # import cv2
 import os
 import time 
@@ -40,7 +40,6 @@ def write_line(directory, image_name, num_detections):
 def process_images(images_path):
     count = 0 
     processed_imgs = set() 
-    meta_data = []
 
     while(True): 
         all_images = os.listdir(images_path)
@@ -54,9 +53,11 @@ def process_images(images_path):
 
             # Run inference and store number of detections
             inference = model(image_path)
-        
-            # detection_count = len(inference.boxes) # TODO: figure out why this broke
-            detection_count = 69 
+
+            for inference in inference:
+                boxes = inference.boxes
+                detection_count = len(boxes)
+
             # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
             write_line(os.path.join(cwd, 'detections.csv'), image, detection_count)
             
@@ -73,7 +74,6 @@ def process_images(images_path):
         new_num_images = len(all_images)
         if(new_num_images == num_images):
             print("No new images, exiting...")
-            print(meta_data)
             exit()
         
 
