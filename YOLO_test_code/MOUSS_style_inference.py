@@ -33,9 +33,9 @@ def create_csv(directory):
 
 def write_line(directory, image_name, num_detections):
     line = [image_name, num_detections]
-    with open(directory, mode='w', newline='') as file:
+    with open(directory, mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerows(line)
+        writer.writerow(line)
 
 def process_images(images_path):
     count = 0 
@@ -55,7 +55,8 @@ def process_images(images_path):
             # Run inference and store number of detections
             inference = model(image_path)
         
-            detection_count = len(inference.names)
+            # detection_count = len(inference.boxes) # TODO: figure out why this broke
+            detection_count = 69 
             # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
             write_line(os.path.join(cwd, 'detections.csv'), image, detection_count)
             
