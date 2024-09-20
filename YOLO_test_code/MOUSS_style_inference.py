@@ -13,6 +13,7 @@ from ultralytics import YOLO
 # import cv2
 import os
 import time 
+import csv
 
 cwd = os.getcwd() # Fish_no_fish project root
 
@@ -29,6 +30,7 @@ images_dir = os.path.join(cwd, 'test_code_2/rcnn_training/fish_data/fish_images'
 def process_images(images_path):
     count = 0 
     processed_imgs = set() 
+    meta_data = []
 
     while(True): 
         all_images = os.listdir(images_path)
@@ -40,7 +42,12 @@ def process_images(images_path):
         for image in images:
             image_path = os.path.join(images_path, image)
 
-            inference = model(image_path, save_txt=True)
+            # Run inference and store number of detections
+            inference = model(image_path)
+            detection_count = len(inference.boxes)
+            meta_data.append([image, detection_count])
+            
+
 
             processed_imgs.add(image)
             print(count)
@@ -53,11 +60,15 @@ def process_images(images_path):
         new_num_images = len(all_images)
         if(new_num_images == num_images):
             print("No new images, exiting...")
+            print(meta_data)
             exit()
         
-# Test to see what happens if I add one more image 
-# while its running. Make sure that the code only 
-# processes the new image 
 
 
 process_images(images_dir)
+
+# Run inference on every image 
+# Store the image name and number of detections in csv file 
+# Parse the csv, find max number of detections during each interval (maybe separate program)
+# Save best images with inference data on them
+# Display to user 
