@@ -13,9 +13,8 @@ from ultralytics import YOLO, solutions
 # import cv2
 import os
 import time 
-import csv
 import pandas as pd 
-
+import numpy as np # TODO: remove, used to find table shape
 
 class FishDetector:
     def __init__ (self):
@@ -29,7 +28,7 @@ class FishDetector:
         ## Specify path to images
         self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
 
-        self.wait_for_new_images_time = 4 # Seconds, before the program starts analyzing metrics
+        self.wait_for_new_images_time = 1 # Seconds, before the program starts analyzing metrics
         self.need_header = True
 
         self.analyze_every_x_frame = 1  # Analyze every (2nd, 3rd, 4th,... ect) frame
@@ -101,20 +100,21 @@ class FishDetector:
                 break
 
     def get_metrics(self, path_to_csv):
-        chunk_size = self.metrics_chunk_size
-
-        for i in range(int(self.num_images / self.metrics_chunk_size) + 1): 
-            '''
-            Analyze all the data in chunks that equate to one minute of images 
-            '''
-            tmp_table = []
-            for df in pd.read_csv(path_to_csv, chunksize=chunk_size):
-                # tmp_table.append([df.Image, df.Num_detections])# TODO: this is coming off as two separate tables but should be one table. 
-                pass 
-            # print("temp table = ")
-            # print(tmp_table)
-            # print("table shape = ")
-            # print(len(tmp_table))
+        '''
+        Analyze all the data in chunks that equate to one minute of images 
+        '''
+        # wrap in a while loop TODO
+        num_rows = self.metrics_chunk_size
+        print('num rows = ', num_rows)
+        tmp_table = []
+        for df in pd.read_csv(path_to_csv, nrows=num_rows):
+            tmp_table.append([df[0], df[1]])# TODO: this is coming off as two separate tables but should be one table. 
+            pass 
+        
+        print("temp table = ")
+        print(tmp_table)
+        print("table shape = ")
+        print(np.shape(tmp_table))
 
 def main():
 
