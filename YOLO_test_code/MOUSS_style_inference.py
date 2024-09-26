@@ -33,10 +33,10 @@ class FishDetector:
         self.wait_for_new_images_time = 1 # Seconds, before the program starts analyzing metrics
         self.need_header = True
 
-        self.analyze_every_x_frame = 1  # Analyze every (2nd, 3rd, 4th,... ect) frame
+        self.analyze_every_x_frames = 10  # Analyze every (2nd, 3rd, 4th,... ect) frame
                                         # This must be a tunable parameter
 
-        self.metrics_chunk_size = (6 * 60) / self.analyze_every_x_frame  # 6 frames per second * 60 frames in a minute / how many we actually analyze 
+        self.metrics_chunk_size = (6 * 60) / self.analyze_every_x_frames  # 6 frames per second * 60 frames in a minute / how many we actually analyze 
                                         # batch size MUST represent 1 minute of data 
                                         # for statistical accuracy. 
                                         # Max = 360 (frames in one minute of data)
@@ -76,7 +76,7 @@ class FishDetector:
             # Get all the unprocessed images
             images = [cur_image for cur_image in all_images if cur_image.endswith(('.jpg', '.png')) and cur_image not in processed_imgs]
             
-            for image in images:
+            for image in images[::self.analyze_every_x_frames]:
                 image_path = os.path.join(images_path, image)
 
                 # Run inference and store number of detections
@@ -122,7 +122,9 @@ class FishDetector:
         for df in pd.read_csv(path_to_csv, chunksize=num_rows):
             max = df['Num_detections'].max()
             max_of_chunk.append(max)
-            max_idx = df['Num_detections'].idxmax()
+
+            max_idx = df['Num_detections'].idxmax() # TODO: need to return name of image, not idx number
+
             idx_of_chunk_max.append(max_idx)
             mean = df['Num_detections'].mean()
             mean_of_chunk.append(mean)
@@ -172,10 +174,10 @@ class FishDetector:
 def main():
 
     fishDetector = FishDetector() 
-    #fishDetector.process_images(fishDetector.images_dir)    # TODO: maybe move 
-    csv_path = os.path.join(fishDetector.cwd, 'long_detections.csv')
+    fishDetector.process_images(fishDetector.images_dir)    # TODO: maybe move 
+    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path)
-    fishDetector.visualize_stats(fishDetector.stats_dict)
+    # fishDetector.visualize_stats(fishDetector.stats_dict)
 
 
 
