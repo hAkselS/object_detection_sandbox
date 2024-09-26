@@ -13,8 +13,10 @@ from ultralytics import YOLO, solutions
 # import cv2
 import os
 import time 
-import pandas as pd 
+import pandas as pd # Handle CSV file 
 import numpy as np # TODO: remove, used to find table shape
+import streamlit as st 
+import plotly.express as px
 
 class FishDetector:
     def __init__ (self):
@@ -40,6 +42,9 @@ class FishDetector:
                                         # Max = 360 (frames in one minute of data)
 
         self.num_images = 0 
+
+        self.stats_dict = {'Minutes': [],'Maxes': [], 'Indexes': [], 'Means': []}
+
         
         print("image batch size = ", self.metrics_chunk_size)
     def write_line(self, directory, image_name, num_detections):
@@ -102,27 +107,75 @@ class FishDetector:
     def get_metrics(self, path_to_csv):
         '''
         Analyze all the data in chunks that equate to one minute of images 
+        Each statistic is calculated over 1 single chunk.
+        Under the hood, dataframes are loaded in chunks, so
+        when I ask for max, I get the max from the chunk, 
+        not the overall. 
         '''
-        # wrap in a while loop TODO
-        num_rows = self.metrics_chunk_size
+        num_rows = int(self.metrics_chunk_size) # num rows = 360
         print('num rows = ', num_rows)
-        tmp_table = []
-        for df in pd.read_csv(path_to_csv, nrows=num_rows):
-            tmp_table.append([df[0], df[1]])# TODO: this is coming off as two separate tables but should be one table. 
-            pass 
-        
-        print("temp table = ")
-        print(tmp_table)
-        print("table shape = ")
-        print(np.shape(tmp_table))
+
+        max_of_chunk = []
+        idx_of_chunk_max = []  
+        mean_of_chunk = [] 
+
+        for df in pd.read_csv(path_to_csv, chunksize=num_rows):
+            max = df['Num_detections'].max()
+            max_of_chunk.append(max)
+            max_idx = df['Num_detections'].idxmax()
+            idx_of_chunk_max.append(max_idx)
+            mean = df['Num_detections'].mean()
+            mean_of_chunk.append(mean)
+
+        print('Number of chunks =', len(max_of_chunk))
+
+        for i in range(len(max_of_chunk)):
+            self.stats_dict['Minutes'].append(i)
+            self.stats_dict['Maxes'].append(max_of_chunk[i])
+            self.stats_dict['Indexes'].append(idx_of_chunk_max[i])
+            self.stats_dict['Means'].append(mean_of_chunk[i])
+        print(self.stats_dict)
+
+
+    def visualize_stats (self, stats=None):
+        if (stats is None):
+            # Default to self.stats_dict
+            stats = self.stats_dict
+        # translate python dictionary to pandas dataframe
+        data = pd.DataFrame.from_dict(stats)
+        # st.bar_chart(data, y = ['Maxes','Means']) 
+
+        # Plotly 
+        # Define custom colors for the bars
+        custom_colors = {
+            'Maxes': 'orange',     # Set 'Maxes' to orange
+            'Means': 'rgb(0, 119, 190)'  # Set 'Means' to ocean blue (using RGB format)
+        }
+
+        figure = px.bar(
+            data,
+            x = 'Minutes',
+            y = ['Maxes', 'Means'],
+            labels={
+            'Minute': 'Time (Minutes)',  # X-axis label
+            'value': 'Detections',  # Custom Y-axis label
+            'variable': 'Metrics'  # Legend label for grouping 'Maxes' and 'Means'
+            },
+            title='FNF Detections',
+            barmode='overlay',
+            color_discrete_map=custom_colors,
+            opacity=1
+        )
+
+        st.plotly_chart(figure)
 
 def main():
 
     fishDetector = FishDetector() 
-    # create_csv(os.path.join(cwd, 'detections.csv')) # Use current directory for now
-    fishDetector.process_images(fishDetector.images_dir)    # TODO: maybe move 
-    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
+    #fishDetector.process_images(fishDetector.images_dir)    # TODO: maybe move 
+    csv_path = os.path.join(fishDetector.cwd, 'long_detections.csv')
     fishDetector.get_metrics(csv_path)
+    fishDetector.visualize_stats(fishDetector.stats_dict)
 
 
 
