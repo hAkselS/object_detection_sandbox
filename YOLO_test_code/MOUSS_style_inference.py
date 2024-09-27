@@ -104,7 +104,7 @@ class FishDetector:
                 print("No new images, exiting...")
                 break
 
-    def get_metrics(self, path_to_csv):
+    def get_metrics(self, path_to_csv, write_stats_csv=False):
         '''
         Analyze all the data in chunks that equate to one minute of images 
         Each statistic is calculated over 1 single chunk.
@@ -144,8 +144,14 @@ class FishDetector:
         ## Print for troubleshooting 
         print(self.stats_dict)
 
+        # Write to CSV if desired 
+        if (write_stats_csv == True): 
+            stats_df = pd.DataFrame.from_dict(self.stats_dict)
+            stats_df.to_csv('stats.csv', index=False, header=True)
 
-    def visualize_stats (self, stats=None):
+
+
+    def visualize_stats(self, stats=None):
         if (stats is None):
             # Default to self.stats_dict
             stats = self.stats_dict
@@ -177,12 +183,34 @@ class FishDetector:
 
         st.plotly_chart(figure)
 
+    def inference_best_images(self, path_to_csv=None):
+        '''
+        Run inference on the images that were selected as
+        'best' by get_metrics. Images should be saved to
+        a directory called 'labeled_data' and should have 
+        bounding boxes (but not lables) stored AS PART OF
+        THE IMAGE. 
+        '''
+
+        # If else must return a list of image names
+        if (path_to_csv is not None): # CSV case
+            # TODO: fill this in 
+            pass 
+        else:
+            images_to_inference = [] 
+            for i in range(len(self.stats_dict)):
+                #images_to_inference...
+                pass 
+        
+
+
+
 def main():
 
     fishDetector = FishDetector() 
-    # fishDetector.process_images(fishDetector.images_dir)    # TODO: maybe move 
-    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
-    fishDetector.get_metrics(csv_path)
+    # fishDetector.process_images(fishDetector.images_dir)    
+    csv_path = os.path.join(fishDetector.cwd, 'long_detections.csv')
+    fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     # fishDetector.visualize_stats(fishDetector.stats_dict)
 
 
