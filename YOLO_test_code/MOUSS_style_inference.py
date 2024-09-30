@@ -8,15 +8,17 @@ Reference:
  -
 '''
 
-import torch 
-from ultralytics import YOLO, solutions
+from ultralytics import YOLO
 # import cv2
 import os
 import time 
 import pandas as pd # Handle CSV file 
 import numpy as np # TODO: remove, used to find table shape
-import streamlit as st 
-import plotly.express as px
+import streamlit as st # display metrics on webpage 
+import plotly.express as px # for metrics 
+from PIL import Image, ImageDraw, ImageFont
+
+
 
 class FishDetector:
     def __init__ (self):
@@ -194,14 +196,35 @@ class FishDetector:
 
         # If else must return a list of image names
         if (path_to_csv is not None): # CSV case
-            # TODO: fill this in 
+            # TODO: if using csv method, fill 'images_to_inference" list with string names of all revelvant images
             pass 
         else:
             images_to_inference = [] 
-            for i in range(len(self.stats_dict)):
-                #images_to_inference...
-                pass 
+            images_to_inference.append(self.stats_dict['Names'])
         
+        for name in self.stats_dict['Names']:
+            # TODO: make one path variable that goes into init of class
+            path_to_best_image = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images/')
+            path_to_best_image = os.path.join(path_to_best_image, name)
+            second_inference = self.model(path_to_best_image, save=True)
+            
+            image = Image.open(path_to_best_image)
+            draw = ImageDraw.Draw(image)
+            for result in second_inference:
+                boxes = result.boxes
+
+                for box in boxes: 
+                    box_coords = box.xyxy[0]
+                    # print(box_coords)
+                    # TODO: Scaling is wrong here
+                    x, y, w, h = box_coords
+                    top_left = (x, y)
+                    bottom_right = (x+w, y+h)
+                    draw.rectangle([top_left, bottom_right], outline='red', width=3)
+            image.show()
+                    # image.save(save_path)
+
+
 
 
 
@@ -209,9 +232,11 @@ def main():
 
     fishDetector = FishDetector() 
     # fishDetector.process_images(fishDetector.images_dir)    
-    csv_path = os.path.join(fishDetector.cwd, 'long_detections.csv')
+    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
+    fishDetector.inference_best_images()
     # fishDetector.visualize_stats(fishDetector.stats_dict)
+    
 
 
 
