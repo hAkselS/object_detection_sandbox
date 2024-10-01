@@ -2,3 +2,4 @@ runs
 data
 *.pt
 *.csv
+image_outputs

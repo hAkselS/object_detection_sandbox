@@ -16,7 +16,7 @@ import pandas as pd # Handle CSV file
 import numpy as np # TODO: remove, used to find table shape
 import streamlit as st # display metrics on webpage 
 import plotly.express as px # for metrics 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 
 
@@ -29,8 +29,10 @@ class FishDetector:
 
         self.model = YOLO(self.model_path)
 
-        ## Specify path to images
-        self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
+        ## Specify path to images ##
+        # self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
+        self.images_dir = os.path.join(self.cwd, '/Volumes/KINGSTON/20240831_172402')
+
 
         self.wait_for_new_images_time = 1 # Seconds, before the program starts analyzing metrics
         self.need_header = True
@@ -193,8 +195,11 @@ class FishDetector:
         bounding boxes (but not lables) stored AS PART OF
         THE IMAGE. 
         '''
-
-        # If else must return a list of image names
+        # Create a place to save images (make if it doesn't exit yet)
+        image_output_dir = os.path.join(self.cwd, 'image_outputs')
+        os.makedirs(image_output_dir, exist_ok=True)
+        
+        # Return a list of image names, either from local memory of a csv
         if (path_to_csv is not None): # CSV case
             # TODO: if using csv method, fill 'images_to_inference" list with string names of all revelvant images
             pass 
@@ -202,11 +207,10 @@ class FishDetector:
             images_to_inference = [] 
             images_to_inference.append(self.stats_dict['Names'])
         
+        idx = 0
         for name in self.stats_dict['Names']:
-            # TODO: make one path variable that goes into init of class
-            path_to_best_image = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images/')
-            path_to_best_image = os.path.join(path_to_best_image, name)
-            second_inference = self.model(path_to_best_image, save=True)
+            path_to_best_image = os.path.join(self.images_dir, name)
+            second_inference = self.model(path_to_best_image)
             
             image = Image.open(path_to_best_image)
             draw = ImageDraw.Draw(image)
@@ -219,13 +223,16 @@ class FishDetector:
                     # TODO: Scaling is wrong here
                     x, y, w, h = box_coords
                     top_left = (x, y)
-                    bottom_right = (x+w, y+h)
-                    draw.rectangle([top_left, bottom_right], outline='red', width=3)
-            image.show()
-                    # image.save(save_path)
-
-
-
+                    # bottom_right = (x+w, y+h)
+                    width_height = (w, h)
+                    draw.rectangle([top_left, width_height], outline='red', width=3)
+            # Save each annotated image
+            # image_name = os.path.join('prediction_', str(idx)) # name the image 'prediction_2' for ex. 
+            # image_name = os.path.join(image_name, '.png')
+            image_name = 'prediction_' + str(idx) + '.png'
+            image_save_path = os.path.join(image_output_dir, image_name)
+            image.save(image_save_path)
+            idx = idx + 1
 
 
 def main():
@@ -237,8 +244,6 @@ def main():
     fishDetector.inference_best_images()
     # fishDetector.visualize_stats(fishDetector.stats_dict)
     
-
-
 
 if __name__ == '__main__': 
     main()
