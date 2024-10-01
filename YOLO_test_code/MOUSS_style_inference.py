@@ -242,7 +242,7 @@ def main():
     csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     fishDetector.inference_best_images()
-    # fishDetector.visualize_stats(fishDetector.stats_dict)
+    fishDetector.visualize_stats(fishDetector.stats_dict)
     
 
 if __name__ == '__main__': 
