@@ -30,8 +30,8 @@ class FishDetector:
         self.model = YOLO(self.model_path)
 
         ## Specify path to images ##
-        # self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
-        self.images_dir = os.path.join(self.cwd, '/Volumes/KINGSTON/20240831_172402')
+        self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
+        # self.images_dir = os.path.join(self.cwd, '/Volumes/KINGSTON/20240831_172402')
 
 
         self.wait_for_new_images_time = 1 # Seconds, before the program starts analyzing metrics
@@ -238,7 +238,7 @@ class FishDetector:
 def main():
 
     fishDetector = FishDetector() 
-    # fishDetector.process_images(fishDetector.images_dir)    
+    fishDetector.process_images(fishDetector.images_dir)    
     csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     fishDetector.inference_best_images()
