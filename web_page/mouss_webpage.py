@@ -56,6 +56,8 @@ currentTemp = st.empty()
 fishDetected = st.empty()
 
 status_placeholder = st.empty()
+image_placeholder = st.empty()
+second_image_placeholder = st.empty()
 
 # Here is where variables get updated every one second, on the website
 for i in range(100):
@@ -79,5 +81,9 @@ for i in range(100):
         is_recording = True
     if i % 11 == 0:
         is_recording = False 
+    if i > 10: 
+        image_placeholder.image('test_code_2/rcnn_training/fish_data/fish_images/Screen Shot 2024-09-06 at 11.56.53 AM.png', caption='pretty good fish', width = 150)
+    if i > 12: 
+        second_image_placeholder.image('test_code_2/rcnn_training/fish_data/fish_images/Screen Shot 2024-09-06 at 12.17.48 PM.png', caption='second fish', width = 150)
     show_recording_status(status_placeholder, is_recording)
     time.sleep(1)
