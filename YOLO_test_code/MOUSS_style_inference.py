@@ -110,7 +110,7 @@ class FishDetector:
 
     def get_metrics(self, path_to_csv, write_stats_csv=False):
         '''
-        Analyze all the data in chunks that equate to one minute of images 
+        Analyze all the data in chunks that equate to one minute of images.
         Each statistic is calculated over 1 single chunk.
         Under the hood, dataframes are loaded in chunks, so
         when I ask for max, I get the max from the chunk, 
@@ -128,7 +128,7 @@ class FishDetector:
             max = df['Num_detections'].max()
             max_of_chunk.append(max)
             
-            max_idx = df['Num_detections'].idxmax() # TODO: need to return name of image, not idx number
+            max_idx = df['Num_detections'].idxmax()
             idx_of_chunk_max.append(max_idx)
             
             name_string = df['Image'][max_idx]
@@ -196,7 +196,7 @@ class FishDetector:
         THE IMAGE. 
         '''
         # Create a place to save images (make if it doesn't exit yet)
-        image_output_dir = os.path.join(self.cwd, 'image_outputs')
+        image_output_dir = os.path.join(self.cwd, 'labeled_data')
         os.makedirs(image_output_dir, exist_ok=True)
         
         # Return a list of image names, either from local memory of a csv
@@ -238,11 +238,11 @@ class FishDetector:
 def main():
 
     fishDetector = FishDetector() 
-    fishDetector.process_images(fishDetector.images_dir)    
+    #fishDetector.process_images(fishDetector.images_dir)    
     csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     fishDetector.inference_best_images()
-    fishDetector.visualize_stats(fishDetector.stats_dict)
+    #fishDetector.visualize_stats(fishDetector.stats_dict)
     
 
 if __name__ == '__main__': 
