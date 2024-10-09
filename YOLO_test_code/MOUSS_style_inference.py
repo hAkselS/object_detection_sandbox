@@ -17,6 +17,7 @@ import numpy as np # TODO: remove, used to find table shape
 import streamlit as st # display metrics on webpage 
 import plotly.express as px # for metrics 
 from PIL import Image, ImageDraw
+import cv2 # try to move away from pillow 
 
 
 
@@ -192,48 +193,42 @@ class FishDetector:
         Run inference on the images that were selected as
         'best' by get_metrics. Images should be saved to
         a directory called 'labeled_data' and should have 
-        bounding boxes (but not lables) stored AS PART OF
+        bounding boxes (but not labels) stored AS PART OF
         THE IMAGE. 
         '''
-        # Create a place to save images (make if it doesn't exit yet)
+        # Create a place to save images (make if it doesn't exist yet)
         image_output_dir = os.path.join(self.cwd, 'labeled_data')
         os.makedirs(image_output_dir, exist_ok=True)
         
-        # Return a list of image names, either from local memory of a csv
-        if (path_to_csv is not None): # CSV case
-            # TODO: if using csv method, fill 'images_to_inference" list with string names of all revelvant images
-            pass 
+        # Return a list of image names, either from local memory or a csv
+        if path_to_csv is not None:  # CSV case
+            # TODO: fill 'images_to_inference' list with string names of all relevant images from CSV
+            pass
         else:
-            images_to_inference = [] 
-            images_to_inference.append(self.stats_dict['Names'])
-        
+            images_to_inference = self.stats_dict['Names']
+
         idx = 0
         for name in self.stats_dict['Names']:
             path_to_best_image = os.path.join(self.images_dir, name)
             second_inference = self.model(path_to_best_image)
             
-            image = Image.open(path_to_best_image)
-            draw = ImageDraw.Draw(image)
+            # Load image using OpenCV
+            image = cv2.imread(path_to_best_image)
+            
             for result in second_inference:
                 boxes = result.boxes
 
-                for box in boxes: 
+                for box in boxes:
                     box_coords = box.xyxy[0]
-                    # print(box_coords)
-                    # TODO: Scaling is wrong here
-                    x, y, w, h = box_coords
-                    top_left = (x, y)
-                    # bottom_right = (x+w, y+h)
-                    width_height = (w, h)
-                    draw.rectangle([top_left, width_height], outline='red', width=3)
+                    x1, y1, x2, y2 = map(int, box_coords)  # Get bounding box coordinates
+                    # Draw rectangle around the detected object
+                    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 3)  # Red bounding box (BGR format)
+            
             # Save each annotated image
-            # image_name = os.path.join('prediction_', str(idx)) # name the image 'prediction_2' for ex. 
-            # image_name = os.path.join(image_name, '.png')
             image_name = 'prediction_' + str(idx) + '.png'
             image_save_path = os.path.join(image_output_dir, image_name)
-            image.save(image_save_path)
-            idx = idx + 1
-
+            cv2.imwrite(image_save_path, image)  # Save the image with OpenCV
+            idx += 1
 
 def main():
 
@@ -242,7 +237,7 @@ def main():
     csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     fishDetector.inference_best_images()
-    #fishDetector.visualize_stats(fishDetector.stats_dict)
+    # fishDetector.visualize_stats(fishDetector.stats_dict)
     
 
 if __name__ == '__main__': 
