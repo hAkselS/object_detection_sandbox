@@ -16,6 +16,7 @@ import pandas as pd # Handle CSV file
 import numpy as np # TODO: remove, used to find table shape
 import streamlit as st # display metrics on webpage 
 import plotly.express as px # for metrics 
+from PIL import Image, ImageDraw
 import cv2 # try to move away from pillow 
 
 
@@ -30,7 +31,7 @@ class FishDetector:
         self.model = YOLO(self.model_path)
 
         ## Specify path to images ##
-        self.images_dir = os.path.join(self.cwd, 'data/mm_data')
+        self.images_dir = os.path.join(self.cwd, 'test_code_2/rcnn_training/fish_data/fish_images')
         # self.images_dir = os.path.join(self.cwd, '/Volumes/KINGSTON/20240831_172402')
 
 
@@ -70,7 +71,43 @@ class FishDetector:
         the CSV.
         Args: - (string) path to image folder
         '''
-        
+        count = 0 
+        processed_imgs = set() 
+
+        while(True): 
+            all_images = os.listdir(images_path)
+            self.num_images = len(all_images)
+
+            # Get all the unprocessed images
+            images = [cur_image for cur_image in all_images if cur_image.endswith(('.jpg', '.png')) and cur_image not in processed_imgs]
+            
+            for image in images[::self.analyze_every_x_frame]:
+                image_path = os.path.join(images_path, image)
+
+                # Run inference and store number of detections
+                inference = self.model(image_path)
+
+                for inference in inference:
+                    boxes = inference.boxes
+                    detection_count = len(boxes)
+
+                # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
+                self.write_line(os.path.join(self.cwd, 'detections.csv'), image, detection_count)
+                
+
+
+                processed_imgs.add(image)
+                print(count)
+                # print(processed_imgs)
+                count = count + 1 
+
+            # Wait a second and check if any new images were added
+            time.sleep(self.wait_for_new_images_time)
+            all_images = os.listdir(images_path)
+            new_num_images = len(all_images)
+            if(new_num_images == self.num_images):
+                print("No new images, exiting...")
+                break
 
     def get_metrics(self, path_to_csv, write_stats_csv=False):
         '''
@@ -196,10 +233,10 @@ class FishDetector:
 def main():
 
     fishDetector = FishDetector() 
-    fishDetector.process_images(fishDetector.images_dir)    
-    #csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
-    #fishDetector.get_metrics(csv_path, True) # True means write stats to a file
-    #fishDetector.inference_best_images()
+    #fishDetector.process_images(fishDetector.images_dir)    
+    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
+    fishDetector.get_metrics(csv_path, True) # True means write stats to a file
+    fishDetector.inference_best_images()
     # fishDetector.visualize_stats(fishDetector.stats_dict)
     
 
