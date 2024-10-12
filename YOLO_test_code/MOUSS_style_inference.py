@@ -37,7 +37,7 @@ class FishDetector:
         self.wait_for_new_images_time = 1 # Seconds, before the program starts analyzing metrics
         self.need_header = True
 
-        self.analyze_every_x_frame = 1  # Analyze every (2nd, 3rd, 4th,... ect) frame
+        self.analyze_every_x_frame = 6  # Analyze every (2nd, 3rd, 4th,... ect) frame
                                         # This must be a tunable parameter
 
         self.metrics_chunk_size = (6 * 60) / self.analyze_every_x_frame  # 6 frames per second * 60 frames in a minute / how many we actually analyze 
@@ -70,7 +70,37 @@ class FishDetector:
         the CSV.
         Args: - (string) path to image folder
         '''
+        current_image = 0
+  
+
+        while (True): # Maybe while something else
+            all_images = os.listdir(images_path)
+            self.num_images = len(all_images)
+            # Open starting image 
+            image = f'{current_image:05d}.png' # TODO: WILL BE JPG ON MOUSS_MINI
+            image_path = os.path.join(images_path, image)
+            print(image)
+            inference = self.model(image_path)
+
+            for inference in inference:
+                boxes = inference.boxes
+                detection_count = len(boxes)
+
+            # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
+            self.write_line(os.path.join(self.cwd, 'detections.csv'), image, detection_count)
+                
+            time.sleep(1)
+            current_image += self.analyze_every_x_frame 
+
+            # TODO: no error handling right now 
+                # if it fails, either try again or exit
+
+            # Error handling (try the next image if the first fails) 
+            # Inference starting image 
+        # Update currnet image 
         
+
+
 
     def get_metrics(self, path_to_csv, write_stats_csv=False):
         '''
