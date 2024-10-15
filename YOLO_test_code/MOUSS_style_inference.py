@@ -99,7 +99,7 @@ class FishDetector:
                     print("failure count greater than 10, exiting")
                     exit() 
 
-            time.sleep(1)
+            time.sleep(1) # TODO: remove 
             
 
             # TODO: no error handling right now 
