@@ -75,7 +75,7 @@ class FishDetector:
 
         while (True): # Maybe while something else
             all_images = os.listdir(images_path)
-            self.num_images = len(all_images)
+            self.num_images = len(all_images) 
             # Open starting image 
             image = f'{current_image:05d}.png' # TODO: WILL BE JPG ON MOUSS_MINI
             image_path = os.path.join(images_path, image)
@@ -94,23 +94,12 @@ class FishDetector:
             except:
                 failure_count += 1 
                 print("failed to open image, failure count:", failure_count)
-                time.sleep(2)
-                if (failure_count > 10): # TODO: determine this time with jeremy
-                    print("failure count greater than 10, exiting")
-                    exit() 
-
-            time.sleep(1) # TODO: remove 
-            
-
-            # TODO: no error handling right now 
-                # if it fails, either try again or exit
-
-            # Error handling (try the next image if the first fails) 
-            # Inference starting image 
-        # Update currnet image 
-        
-
-
+                time.sleep(1)
+                if( failure_count > 7): # Check the next image in the off chance that a single image was skipped
+                    current_image += 1 # Try 7 times, then look at the next image
+            if (failure_count > 13): # Approximately 13 seconds of trying to find new images
+                print("failure count greater than 10, exiting")
+                break # Exit process_images if cannot open next image
 
     def get_metrics(self, path_to_csv, write_stats_csv=False):
         '''
@@ -156,8 +145,6 @@ class FishDetector:
         if (write_stats_csv == True): 
             stats_df = pd.DataFrame.from_dict(self.stats_dict)
             stats_df.to_csv('stats.csv', index=False, header=True)
-
-
 
     def visualize_stats(self, stats=None):
         if (stats is None):
@@ -237,9 +224,9 @@ def main():
 
     fishDetector = FishDetector() 
     fishDetector.process_images(fishDetector.images_dir)    
-    #csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
-    #fishDetector.get_metrics(csv_path, True) # True means write stats to a file
-    #fishDetector.inference_best_images()
+    csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
+    fishDetector.get_metrics(csv_path, True) # True means write stats to a file
+    fishDetector.inference_best_images()
     # fishDetector.visualize_stats(fishDetector.stats_dict)
     
 
