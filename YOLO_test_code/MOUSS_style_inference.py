@@ -71,7 +71,7 @@ class FishDetector:
         Args: - (string) path to image folder
         '''
         current_image = 0
-  
+        failure_count = 0 
 
         while (True): # Maybe while something else
             all_images = os.listdir(images_path)
@@ -80,17 +80,27 @@ class FishDetector:
             image = f'{current_image:05d}.png' # TODO: WILL BE JPG ON MOUSS_MINI
             image_path = os.path.join(images_path, image)
             print(image)
-            inference = self.model(image_path)
 
-            for inference in inference:
-                boxes = inference.boxes
-                detection_count = len(boxes)
+            try:
+                inference = self.model(image_path)
 
-            # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
-            self.write_line(os.path.join(self.cwd, 'detections.csv'), image, detection_count)
-                
+                for inference in inference:
+                    boxes = inference.boxes
+                    detection_count = len(boxes)
+                # meta_data.append([image, detection_count]) # write as you go, instead of at the end 
+                self.write_line(os.path.join(self.cwd, 'detections.csv'), image, detection_count)
+                current_image += self.analyze_every_x_frame
+                failure_count = 0 # Reset failure count if successful 
+            except:
+                failure_count += 1 
+                print("failed to open image, failure count:", failure_count)
+                time.sleep(2)
+                if (failure_count > 10): # TODO: determine this time with jeremy
+                    print("failure count greater than 10, exiting")
+                    exit() 
+
             time.sleep(1)
-            current_image += self.analyze_every_x_frame 
+            
 
             # TODO: no error handling right now 
                 # if it fails, either try again or exit
