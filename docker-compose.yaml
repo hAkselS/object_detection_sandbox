@@ -1,0 +1,22 @@
+
+services:
+  fish_no_fish:
+    image: fnf_img
+
+    container_name: fnf
+
+    privileged: true
+
+    user: root
+
+    environment:
+      - DISPLAY=$DISPLAY
+      - ROS_LOG_DIR=/data/mouss_logs
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - .:/fnf_ws
+
+    command: /bin/bash -c "tail -f /dev/null"

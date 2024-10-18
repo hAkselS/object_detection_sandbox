@@ -11,8 +11,9 @@ model = YOLO(model_path)
 
 
 
-results = model.predict(source ='/media/haksel/KINGSTON/20240831_172402/20240831.172835.545.001356.jpg')
+#results = model.predict(source ='/media/haksel/KINGSTON/20240831_172402/20240831.172835.545.001356.jpg')
 #results = model.predict(source ='/media/haksel/KINGSTON/20240831_172402/20240831.172450.455.000005.jpg')
+results = model.predict(source = 'data/mm_data/00003.png')
 
 for result in results:
     boxes = result.boxes

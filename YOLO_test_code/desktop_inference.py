@@ -154,8 +154,6 @@ class FishDetector:
             stats_df = pd.DataFrame.from_dict(self.stats_dict)
             stats_df.to_csv('stats.csv', index=False, header=True)
 
-
-
     def visualize_stats(self, stats=None):
         if (stats is None):
             # Default to self.stats_dict
@@ -233,7 +231,7 @@ class FishDetector:
 def main():
 
     fishDetector = FishDetector() 
-    #fishDetector.process_images(fishDetector.images_dir)    
+    fishDetector.process_images(fishDetector.images_dir)    
     csv_path = os.path.join(fishDetector.cwd, 'detections.csv')
     fishDetector.get_metrics(csv_path, True) # True means write stats to a file
     fishDetector.inference_best_images()
