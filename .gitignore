@@ -4,3 +4,5 @@ data
 *.csv
 labeled_data
 models/*
+
+fish_no_fish/test_scripts/data_dump
