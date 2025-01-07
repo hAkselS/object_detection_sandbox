@@ -1,3 +1,8 @@
+"""
+Spec: Use this script to train yolo 11 nano, medium or larger models. 
+
+"""
+
 import torch
 import os
 from ultralytics import YOLO
@@ -21,7 +26,7 @@ base_path = 'fish_no_fish/test_scripts/data_dump/'
 yaml_file_path = os.path.join(base_path, 'fish_dataset.yaml')
 
 # Load the smaller YOLO11 model
-small_model = YOLO("yolo11m.pt") #YOLO("yolo11n.pt")
+small_model = YOLO("yolo11l.pt") #YOLO("yolo11n.pt")
 
 # Move the model to the correct device
 small_model.model.to(device)
@@ -36,20 +41,21 @@ small_model.train(
     data=yaml_file_path,
     epochs=300,
     imgsz=640,
-    batch=16,  # Adjust batch size based on GPU capacity
+    batch=8,  # Adjust batch size based on GPU capacity
     lr0=0.001,  # Initial learning rate
     lrf=0.0001,  # Final learning rate (used for Cosine Annealing)
     optimizer='AdamW',  # Use AdamW optimizer for better performance
     device=device,
+    patience=20,  # Early stopping if no improvement after 10 epochs
     save_period=10,  # Save model checkpoint every 10 epochs
-    patience=10,  # Early stopping if no improvement after 10 epochs
     augment=True,  # Enable data augmentation
     mosaic=True,  # Use mosaic augmentation
     mixup=True,   # Use MixUp augmentation
     cos_lr=True,  # Cosine annealing learning rate
-    project='m_logs',  # TensorBoard logging directory
+    project='l_logs',  # TensorBoard logging directory
 )
 
+#     patience=10,  # Early stopping if no improvement after 10 epochs
 print("Training complete!")
 
 # Unfreeze all layers after the initial phase
@@ -58,12 +64,12 @@ for param in small_model.model.model.parameters():
 
 # Save the trained model
 # trained_model_path = os.path.join(base_path, "yolo11n_fish_2016_v1.pt")
-trained_model_path = os.path.join(base_path, "yolo11m_fish_2016_v1.pt")
+trained_model_path = os.path.join(base_path, "yolo11l_fish_2016_v2.pt")
 small_model.save(trained_model_path)
 print(f"Trained model saved to {trained_model_path}")
 
 # Save the model weights separately for further use
-weights_path = os.path.join(base_path, "yolo11m_fish_2016_v1.pth")
+weights_path = os.path.join(base_path, "yolo11l_fish_2016_v2.pth")
 torch.save(small_model.model.state_dict(), weights_path)
 print(f"Weights saved to {weights_path}")
 

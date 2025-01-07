@@ -6,3 +6,9 @@ labeled_data
 models/*
 
 fish_no_fish/test_scripts/data_dump
+
+models
+logs
+m_logs
+n_logs
+l_logs
